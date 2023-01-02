@@ -4,17 +4,15 @@ const { Post, User, Comment } = require('../models');
 const withAuth = require('../utils/auth');
 
 router.get('/', withAuth, (req, res) => {
-  console.log(req.session);
-  console.log('======================');
   Post.findAll({
     where: {
-      user_id: req.session.user_id
+      user_id: req.session.user_id,
     },
     attributes: [
       'id',
-      'post_content',
       'title',
       'created_at',
+      'post_content',
     ],
     include: [
       {
@@ -23,13 +21,13 @@ router.get('/', withAuth, (req, res) => {
         include: {
           model: User,
           attributes: ['username']
-        }
+        },
       },
       {
         model: User,
-        attributes: ['username']
-      }
-    ]
+        attributes: ['username'],
+      },
+    ],
   })
     .then(dbPostData => {
       const posts = dbPostData.map(post => post.get({ plain: true }));
@@ -42,37 +40,35 @@ router.get('/', withAuth, (req, res) => {
 });
 
 router.get('/edit/:id', withAuth, (req, res) => {
-  Post.findOne({
-    where: {
-      id: req.params.id
-    },
-    attributes: [
-      'id',
-      'post_content',
-      'title',
-      'created_at',
-    ],
+  Post.findByPk(req.params.id, {
+    attributes: ['id', 'title', 'created_at', 'post_content'],
     include: [
       {
         model: Comment,
         attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
         include: {
           model: User,
-          attributes: ['username']
-        }
+          attributes: ['username'],
+        },
       },
       {
         model: User,
-        attributes: ['username']
-      }
-    ]
+        attributes: ['username'],
+      },
+    ],
   })
     .then(dbPostData => {
-      const post = dbPostData.get({ plain: true });
-      res.render('edit-post', { post, loggedIn: true });
+      if (dbPostData) {
+        const post = dbPostData.get({ plain: true });
+        res.render('edit-post', {
+          post,
+          loggedIn: true,
+        });
+      } else {
+        res.status(404).end();
+      }
     })
     .catch(err => {
-      console.log(err);
       res.status(500).json(err);
     });
 });

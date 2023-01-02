@@ -27,7 +27,7 @@ const sess = {
     maxAge: 1800000
   },
   rolling: true,
-  resave: false,
+  resave: true,
   saveUninitialized: true,
   store: new SequelizeStore({
     db: sequelize
